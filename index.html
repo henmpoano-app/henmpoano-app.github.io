@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HEN MPOANO</title>
+<meta name="description" content="Hɛn Mpoano staff app: MEL and Staff Hub in one place.">
+<meta name="theme-color" content="#0f2a3a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="favicon-48.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HEN MPOANO">
+<style>
+  :root{
+    --navy:#0f2a3a; --teal:#0e7c86; --teal-d:#0a5e68; --sand:#cdd3ce; --bg:#f5f4f0;
+    --ink:#1d2b36; --muted:#5d6b75; --line:#e2e2dc;
+    --nav-h:64px; --top-h:52px;
+    --safe-b:env(safe-area-inset-bottom,0px); --safe-t:env(safe-area-inset-top,0px);
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;background:var(--bg);color:var(--ink);
+    font-family:system-ui,-apple-system,"Segoe UI",Roboto,Arial,sans-serif;overscroll-behavior:none}
+  button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
+
+  /* ---------- layout ---------- */
+  #app{position:fixed;inset:0;display:flex;flex-direction:column}
+  #top{height:calc(var(--top-h) + var(--safe-t));padding-top:var(--safe-t);background:var(--navy);color:#fff;
+    display:flex;align-items:center;gap:6px;padding-left:16px;padding-right:6px;flex:none}
+  #top h1{font-size:17px;font-weight:700;letter-spacing:.06em;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  #top .tb{width:42px;height:42px;border-radius:21px;display:grid;place-items:center;opacity:.9}
+  #top .tb:active{background:rgba(255,255,255,.12)}
+  #top .tb[hidden]{display:none}
+  #main{flex:1;position:relative;overflow:hidden}
+  .view{position:absolute;inset:0;display:none}
+  .view.on{display:block}
+  #nav{height:calc(var(--nav-h) + var(--safe-b));padding-bottom:var(--safe-b);background:#fff;border-top:1px solid var(--line);
+    display:flex;flex:none}
+  #nav button{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    font-size:12px;font-weight:600;color:var(--muted)}
+  #nav button svg{width:24px;height:24px}
+  #nav button.on{color:var(--teal)}
+  #nav button.on .pill{background:#dcefef}
+  #nav .pill{padding:3px 18px;border-radius:14px;display:grid;place-items:center;transition:background .15s}
+
+  /* ---------- home ---------- */
+  #home{overflow-y:auto}
+  .hero{position:relative;background:var(--navy);color:#fff;padding:26px 22px 92px;overflow:hidden}
+  .hero small{display:block;font-size:13px;opacity:.75;margin-bottom:4px}
+  .hero h2{margin:0;font-size:28px;letter-spacing:.04em}
+  .hero p{margin:8px 0 0;opacity:.8;font-size:14px;max-width:32em}
+  .hero svg{position:absolute;left:0;right:0;bottom:-1px;width:100%;height:80px}
+  .cards{padding:0 16px 24px;margin-top:-52px;position:relative;display:grid;gap:14px;max-width:720px;margin-left:auto;margin-right:auto}
+  .card{display:flex;gap:14px;align-items:center;text-align:left;width:100%;background:#fff;border-radius:16px;padding:18px;
+    box-shadow:0 1px 2px rgba(15,42,58,.06),0 6px 20px rgba(15,42,58,.08)}
+  .card:active{transform:scale(.99)}
+  .card .ic{width:52px;height:52px;border-radius:14px;display:grid;place-items:center;flex:none;color:#fff}
+  .card .ic svg{width:28px;height:28px}
+  .card h3{margin:0 0 3px;font-size:17px}
+  .card p{margin:0;font-size:13.5px;color:var(--muted);line-height:1.4}
+  .card .go{margin-left:auto;color:#a6b0b6;flex:none}
+  .note{max-width:720px;margin:4px auto 0;padding:0 22px 28px;font-size:12.5px;color:var(--muted);line-height:1.5}
+  #install{display:none;margin:0 16px 18px;max-width:688px}
+  @media (min-width:752px){#install{margin-left:auto;margin-right:auto}}
+  #install.show{display:flex}
+  #install{gap:12px;align-items:center;background:#e7f3f3;border:1px solid #bfe0e0;border-radius:14px;padding:12px 14px;font-size:14px}
+  #install b{display:block}
+  #install button{margin-left:auto;background:var(--teal);color:#fff;border-radius:10px;padding:9px 14px;font-weight:700;flex:none}
+
+  /* ---------- embedded apps ---------- */
+  .frame-wrap{position:absolute;inset:0;background:#fff}
+  .frame-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;background:#fff}
+  .loading{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+    background:var(--bg);color:var(--muted);font-size:14px;z-index:2;transition:opacity .25s}
+  .loading.gone{opacity:0;pointer-events:none}
+  .spin{width:34px;height:34px;border-radius:50%;border:3px solid #d6e4e4;border-top-color:var(--teal);animation:sp 0.9s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .slow{display:none;text-align:center;max-width:300px;line-height:1.5}
+  .slow a{color:var(--teal);font-weight:700}
+  .loading.late .slow{display:block}
+
+  #offline{display:none;position:absolute;left:12px;right:12px;bottom:12px;z-index:5;background:var(--navy);color:#fff;
+    border-radius:12px;padding:12px 14px;font-size:14px;box-shadow:0 6px 20px rgba(0,0,0,.25)}
+  #offline.show{display:block}
+</style>
+</head>
+<body>
+<div id="app">
+  <header id="top">
+    <h1 id="title">HEN MPOANO</h1>
+    <button class="tb" id="reload" title="Reload this section" aria-label="Reload this section" hidden>
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    </button>
+    <button class="tb" id="external" title="Open in browser" aria-label="Open in browser" hidden>
+      <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3h7v7"/><path d="M10 14 21 3"/><path d="M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5"/></svg>
+    </button>
+  </header>
+
+  <main id="main">
+    <!-- Home -->
+    <section class="view on" id="home" aria-label="Home">
+      <div class="hero">
+        <small id="greet">Welcome</small>
+        <h2>HEN MPOANO</h2>
+        <p>Monitoring, evaluation and day-to-day staff tools in one app.</p>
+        <svg viewBox="0 0 400 80" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 30 C 80 10, 160 45, 240 28 S 360 12, 400 26 V80 H0Z" fill="#0a5e68"/>
+          <path d="M0 44 C 90 26, 170 58, 260 40 S 360 30, 400 40 V80 H0Z" fill="#0e7c86"/>
+          <path d="M0 60 C 100 46, 190 72, 280 56 S 370 50, 400 58 V80 H0Z" fill="#f5f4f0"/>
+        </svg>
+      </div>
+
+      <div class="cards">
+        <button class="card" data-open="mel">
+          <span class="ic" style="background:#0e7c86">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>
+          </span>
+          <span>
+            <h3>MEL</h3>
+            <p>Monitoring, evaluation &amp; learning: activities, indicators, evidence and photos.</p>
+          </span>
+          <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+
+        <button class="card" data-open="hub">
+          <span class="ic" style="background:#0f2a3a">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </span>
+          <span>
+            <h3>Staff Hub</h3>
+            <p>Weekly reports, leave, vehicle requests, action items, notices and the staff directory.</p>
+          </span>
+          <svg class="go" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+
+      <div id="install">
+        <span><b>Install HEN MPOANO</b>Add it to your home screen like a normal app.</span>
+        <button id="installBtn">Install</button>
+      </div>
+
+      <p class="note">Each section keeps its own sign-in: MEL uses your team code and password, Staff Hub uses your work email and PIN. You stay signed in when you switch between them.</p>
+    </section>
+
+    <section class="view" id="view-mel" aria-label="MEL"></section>
+    <section class="view" id="view-hub" aria-label="Staff Hub"></section>
+
+    <div id="offline">You're offline. MEL and Staff Hub need an internet connection; they will load again once you're back online.</div>
+  </main>
+
+  <nav id="nav" aria-label="Sections">
+    <button data-go="home" class="on"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></svg></span>Home</button>
+    <button data-go="mel"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg></span>MEL</button>
+    <button data-go="hub"><span class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span>Staff Hub</button>
+  </nav>
+</div>
+
+<script>
+/* ===== The two Apps Script web apps. To point at a new deployment, change the URL here. ===== */
+const APPS = {
+  mel: { title: 'MEL',       url: 'https://script.google.com/macros/s/AKfycbxrWIz2ygxzUUM6S1mVQK3DalI6WkFul1lmS8isSdaxFN-yTJbnr6cxowu4Q0TPAPKZ2g/exec' },
+  hub: { title: 'Staff Hub', url: 'https://script.google.com/macros/s/AKfycby9PX5bZh4fwtly6TbRaQ2m-TpPR1c1ZY44og_LpDS3HqBJt__whQmXKlwIzXdlexig/exec' }
+};
+
+const $ = (s, r = document) => r.querySelector(s);
+let current = 'home';
+
+/* Greeting by time of day (Ghana time) */
+(function () {
+  let h;
+  try { h = +new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: 'Africa/Accra' }).format(new Date()); }
+  catch (e) { h = new Date().getHours(); }
+  $('#greet').textContent = h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+})();
+
+/* Build an app's iframe the first time it's opened; keep it alive afterwards so sign-ins and open forms survive switching. */
+function ensureFrame(key) {
+  const view = $('#view-' + key);
+  if (view.dataset.ready) return;
+  view.dataset.ready = '1';
+  const a = APPS[key];
+  view.innerHTML =
+    '<div class="frame-wrap">' +
+      '<div class="loading"><div class="spin"></div><div>Opening ' + a.title + '…</div>' +
+      '<div class="slow">Still loading. If this page stays blank, <a href="' + a.url + '" target="_blank" rel="noopener">open ' + a.title + ' in the browser</a>.</div></div>' +
+      '<iframe title="' + a.title + '" allow="geolocation; camera; microphone; clipboard-read; clipboard-write; fullscreen; web-share" ' +
+      'referrerpolicy="strict-origin-when-cross-origin"></iframe>' +
+    '</div>';
+  const fr = $('iframe', view), ld = $('.loading', view);
+  const late = setTimeout(() => ld.classList.add('late'), 12000);
+  fr.addEventListener('load', () => { clearTimeout(late); setTimeout(() => ld.classList.add('gone'), 600); });
+  fr.src = a.url;
+}
+
+function show(key, fromHistory) {
+  if (!APPS[key]) key = 'home';
+  if (key !== 'home') ensureFrame(key);
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  (key === 'home' ? $('#home') : $('#view-' + key)).classList.add('on');
+  document.querySelectorAll('#nav button').forEach(b => b.classList.toggle('on', b.dataset.go === key));
+  $('#title').textContent = key === 'home' ? 'HEN MPOANO' : APPS[key].title;
+  $('#reload').hidden = $('#external').hidden = key === 'home';
+  if (!fromHistory && key !== current) {
+    // Home is the bottom of the stack, so Android's back button returns Home before closing the app.
+    if (current === 'home') history.pushState({ s: key }, '', '#' + key);
+    else history.replaceState({ s: key }, '', key === 'home' ? location.pathname : '#' + key);
+  }
+  current = key;
+}
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-go],[data-open]');
+  if (!b) return;
+  const key = b.dataset.go || b.dataset.open;
+  if (key === 'home' && current !== 'home' && history.state && history.state.s) history.back();
+  else show(key);
+});
+
+window.addEventListener('popstate', e => show((e.state && e.state.s) || 'home', true));
+
+$('#reload').addEventListener('click', () => {
+  const v = $('#view-' + current);
+  if (!v) return;
+  delete v.dataset.ready; v.innerHTML = ''; ensureFrame(current);
+});
+$('#external').addEventListener('click', () => { if (APPS[current]) window.open(APPS[current].url, '_blank', 'noopener'); });
+
+/* Open straight into a section from a link such as …/#hub */
+(function () {
+  const h = location.hash.replace('#', '');
+  if (APPS[h]) { history.replaceState(null, '', location.pathname); show(h); }
+})();
+
+/* Offline notice */
+function net() { $('#offline').classList.toggle('show', !navigator.onLine); }
+addEventListener('online', net); addEventListener('offline', net); net();
+
+/* Install prompt (Android Chrome) */
+let deferred = null;
+addEventListener('beforeinstallprompt', e => { e.preventDefault(); deferred = e; $('#install').classList.add('show'); });
+$('#installBtn').addEventListener('click', async () => {
+  if (!deferred) return;
+  deferred.prompt();
+  await deferred.userChoice.catch(() => { });
+  deferred = null; $('#install').classList.remove('show');
+});
+addEventListener('appinstalled', () => $('#install').classList.remove('show'));
+
+/* Service worker: makes the app installable and lets the shell open offline */
+if ('serviceWorker' in navigator) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => { }));
+</script>
+</body>
+</html>
